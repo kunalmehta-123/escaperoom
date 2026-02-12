@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Valentine Escape Room</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="card">
+
+      <!-- HOME SECTION -->
+      <section id="home" class="section active" aria-labelledby="homeTitle">
+        <div class="badge">💘 Valentine Mission</div>
+        <h1 id="homeTitle">Escape Room: Our Love Edition</h1>
+        <p class="sub">
+          Welcome, detective. Your mission:
+          <span class="em">unlock our memories</span>, collect the codes, and reach the final surprise.
+        </p>
+
+        <div class="divider"></div>
+
+        <ul class="bullets">
+          <li>🗝️ One room at a time</li>
+          <li>🧠 Cute brain teasers only</li>
+          <li>🏆 Finish to unlock your reward</li>
+        </ul>
+
+        <button id="startBtn" class="btn primary" type="button">
+          Start Room 1 →
+        </button>
+
+        <p class="tiny muted">P.S. If this feels rigged… it probably is.</p>
+      </section>
+
+      <!-- ROOM 1 SECTION -->
+      <section id="room1" class="section" aria-labelledby="room1Title">
+        <div class="toprow">
+          <button id="backHomeBtn" class="linkbtn" type="button">← Home</button>
+          <div class="pill">Room 1</div>
+        </div>
+
+        <h1 id="room1Title">Room 1: Our Timeline 🔒</h1>
+        <p class="sub">
+          Put these <span class="em">10 moments</span> in the correct order (earliest → latest).
+          <br/>
+          When it’s correct, you’ll unlock a <span class="em">10-digit code</span> based on the
+          <span class="em">original random order</span> you started with.
+        </p>
+
+        <div class="timeline-wrap">
+          <ol id="timelineList" class="timeline" aria-label="Draggable timeline list"></ol>
+
+          <div class="row">
+            <button id="checkBtn" class="btn primary" type="button">Check Order</button>
+            <button id="shuffleBtn" class="btn" type="button">New Shuffle</button>
+            <button id="resetBtn" class="btn" type="button">Reset</button>
+          </div>
+
+          <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+
+          <div id="successBox" class="success hidden">
+            <div class="successTitle">Unlocked ✅</div>
+            <p class="sub">
+              Room 1 code:
+              <span class="code" id="roomCode">----------</span>
+            </p>
+            <p class="tiny muted">Save this code. You’ll need it later.</p>
+
+            <button class="btn disabled" type="button" aria-disabled="true">
+              Room 2 (locked) 🔒
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
