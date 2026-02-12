@@ -129,6 +129,7 @@ h1{margin:0 0 8px; font-size: clamp(26px, 3vw, 36px); letter-spacing:-.03em}
 h2{margin:0 0 6px; font-size: clamp(22px, 2.3vw, 28px); letter-spacing:-.03em}
 .sub{margin:0; color:var(--muted); line-height:1.5}
 .tiny{font-size:12px}
+.muted{color:var(--muted)}
 .kicker{
   font-size:12px;
   color: rgba(255,255,255,.55);
@@ -285,57 +286,7 @@ h2{margin:0 0 6px; font-size: clamp(22px, 2.3vw, 28px); letter-spacing:-.03em}
 .input:focus{border-color: rgba(255,61,127,.45)}
 .input:disabled{opacity:.55}
 
-/* Consistent unlock FX */
-.unlockFx{
-  position:absolute;
-  inset:-40px;
-  pointer-events:none;
-}
-.unlockFx .fxRing{
-  position:absolute;
-  left:50%; top:50%;
-  width:120px; height:120px;
-  border-radius: 999px;
-  border:2px solid rgba(55,214,122,.55);
-  transform: translate(-50%,-50%) scale(.6);
-  opacity:0;
-  animation: fxRing 900ms ease forwards;
-}
-.unlockFx .fxSpark{
-  position:absolute;
-  width:8px; height:8px;
-  border-radius: 99px;
-  background: rgba(55,214,122,.9);
-  left:50%; top:50%;
-  transform: translate(-50%,-50%);
-  opacity:0;
-}
-.unlockFx .fx1{animation: fx1 700ms ease forwards}
-.unlockFx .fx2{animation: fx2 700ms ease forwards}
-.unlockFx .fx3{animation: fx3 700ms ease forwards}
-
-@keyframes fxRing{
-  0%{opacity:0; transform:translate(-50%,-50%) scale(.6)}
-  20%{opacity:1}
-  100%{opacity:0; transform:translate(-50%,-50%) scale(1.6)}
-}
-@keyframes fx1{
-  0%{opacity:0; transform:translate(-50%,-50%)}
-  20%{opacity:1}
-  100%{opacity:0; transform:translate(calc(-50% + 90px), calc(-50% - 30px))}
-}
-@keyframes fx2{
-  0%{opacity:0; transform:translate(-50%,-50%)}
-  20%{opacity:1}
-  100%{opacity:0; transform:translate(calc(-50% - 70px), calc(-50% + 60px))}
-}
-@keyframes fx3{
-  0%{opacity:0; transform:translate(-50%,-50%)}
-  20%{opacity:1}
-  100%{opacity:0; transform:translate(calc(-50% + 20px), calc(-50% + 95px))}
-}
-
-/* Word search */
+/* ===== Word search ===== */
 .wsWrap{
   border:1px solid var(--stroke2);
   border-radius: 18px;
@@ -345,7 +296,7 @@ h2{margin:0 0 6px; font-size: clamp(22px, 2.3vw, 28px); letter-spacing:-.03em}
 }
 .wsGrid{
   display:grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(14, 1fr);
   gap:6px;
   user-select:none;
   touch-action:none;
@@ -388,5 +339,109 @@ h2{margin:0 0 6px; font-size: clamp(22px, 2.3vw, 28px); letter-spacing:-.03em}
   border-color: rgba(55,214,122,.35);
   background: rgba(55,214,122,.10);
 }
+
 .divider{height:1px; background: rgba(255,255,255,.08); margin:14px 0}
 .divider.soft{background: rgba(255,255,255,.06)}
+
+/* ===== FX used by the full-screen unlock overlay ===== */
+.fxRing{
+  position:absolute;
+  left:50%; top:50%;
+  width:140px; height:140px;
+  border-radius: 999px;
+  border:2px solid rgba(55,214,122,.55);
+  transform: translate(-50%,-50%) scale(.6);
+  opacity:0;
+  animation: fxRing 900ms ease forwards;
+}
+.fxSpark{
+  position:absolute;
+  width:10px; height:10px;
+  border-radius: 99px;
+  background: rgba(55,214,122,.9);
+  left:50%; top:50%;
+  transform: translate(-50%,-50%);
+  opacity:0;
+}
+.fx1{animation: fx1 700ms ease forwards}
+.fx2{animation: fx2 700ms ease forwards}
+.fx3{animation: fx3 700ms ease forwards}
+
+@keyframes fxRing{
+  0%{opacity:0; transform:translate(-50%,-50%) scale(.6)}
+  20%{opacity:1}
+  100%{opacity:0; transform:translate(-50%,-50%) scale(1.7)}
+}
+@keyframes fx1{
+  0%{opacity:0; transform:translate(-50%,-50%)}
+  20%{opacity:1}
+  100%{opacity:0; transform:translate(calc(-50% + 120px), calc(-50% - 40px))}
+}
+@keyframes fx2{
+  0%{opacity:0; transform:translate(-50%,-50%)}
+  20%{opacity:1}
+  100%{opacity:0; transform:translate(calc(-50% - 95px), calc(-50% + 80px))}
+}
+@keyframes fx3{
+  0%{opacity:0; transform:translate(-50%,-50%)}
+  20%{opacity:1}
+  100%{opacity:0; transform:translate(calc(-50% + 30px), calc(-50% + 125px))}
+}
+
+/* ===== Full-screen unlock overlay (front & center) ===== */
+.unlockOverlay{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+}
+
+.unlockModal{
+  width: min(520px, calc(100% - 28px));
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: linear-gradient(180deg, rgba(15,17,23,.92), rgba(15,17,23,.78));
+  box-shadow: 0 30px 120px rgba(0,0,0,.75);
+  padding: 20px 18px 18px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+
+.unlockBadge{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: .18em;
+  color: rgba(255,255,255,.9);
+  border: 1px solid rgba(55,214,122,.35);
+  background: rgba(55,214,122,.10);
+}
+
+.unlockTitle{
+  margin-top: 12px;
+  font-weight: 1000;
+  font-size: 22px;
+  letter-spacing:-.02em;
+}
+
+.unlockSub{
+  margin-top: 6px;
+  color: rgba(246,247,251,.70);
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.unlockBigFx{
+  position:absolute;
+  inset:-40px;
+  pointer-events:none;
+}
+
+.hidden{display:none !important;}
