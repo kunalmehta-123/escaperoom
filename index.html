@@ -3,79 +3,233 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Valentine Escape Room</title>
+  <title>Valentine Escape</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="shell">
-    <section class="card">
+    <div class="frame">
 
-      <!-- HOME SECTION -->
-      <section id="home" class="section active" aria-labelledby="homeTitle">
-        <div class="badge">💘 Valentine Mission</div>
-        <h1 id="homeTitle">Escape Room: Our Love Edition</h1>
-        <p class="sub">
-          Welcome, detective. Your mission:
-          <span class="em">unlock our memories</span>, collect the codes, and reach the final surprise.
-        </p>
-
-        <div class="divider"></div>
-
-        <ul class="bullets">
-          <li>🗝️ One room at a time</li>
-          <li>🧠 Cute brain teasers only</li>
-          <li>🏆 Finish to unlock your reward</li>
-        </ul>
-
-        <button id="startBtn" class="btn primary" type="button">
-          Start Room 1 →
-        </button>
-
-        <p class="tiny muted">P.S. If this feels rigged… it probably is.</p>
-      </section>
-
-      <!-- ROOM 1 SECTION -->
-      <section id="room1" class="section" aria-labelledby="room1Title">
-        <div class="toprow">
-          <button id="backHomeBtn" class="linkbtn" type="button">← Home</button>
-          <div class="pill">Room 1</div>
-        </div>
-
-        <h1 id="room1Title">Room 1: Our Timeline 🔒</h1>
-        <p class="sub">
-          Put these <span class="em">10 moments</span> in the correct order (earliest → latest).
-          <br/>
-          When it’s correct, you’ll unlock a <span class="em">10-digit code</span> based on the
-          <span class="em">original random order</span> you started with.
-        </p>
-
-        <div class="timeline-wrap">
-          <ol id="timelineList" class="timeline" aria-label="Draggable timeline list"></ol>
-
-          <div class="row">
-            <button id="checkBtn" class="btn primary" type="button">Check Order</button>
-            <button id="shuffleBtn" class="btn" type="button">New Shuffle</button>
-            <button id="resetBtn" class="btn" type="button">Reset</button>
-          </div>
-
-          <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
-
-          <div id="successBox" class="success hidden">
-            <div class="successTitle">Unlocked ✅</div>
-            <p class="sub">
-              Room 1 code:
-              <span class="code" id="roomCode">----------</span>
-            </p>
-            <p class="tiny muted">Save this code. You’ll need it later.</p>
-
-            <button class="btn disabled" type="button" aria-disabled="true">
-              Room 2 (locked) 🔒
-            </button>
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div class="brandTitle">Valentine Escape</div>
+            <div class="brandSub">Mission: unlock the surprise</div>
           </div>
         </div>
-      </section>
 
-    </section>
+        <div class="hud">
+          <div class="meter">
+            <div class="meterTop">
+              <span class="meterLabel">Progress</span>
+              <span class="meterText" id="meterText">0 / 2</span>
+            </div>
+            <div class="meterBar" role="progressbar" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0">
+              <div class="meterFill" id="meterFill"></div>
+            </div>
+          </div>
+
+          <div class="timer">
+            <span class="timerLabel" id="timerLabel">Timer</span>
+            <span class="timerValue" id="timerValue">00:00</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <section class="card">
+
+        <!-- HOME -->
+        <section id="home" class="section active" aria-labelledby="homeTitle">
+          <h1 id="homeTitle">A tiny escape room… made for you 💘</h1>
+          <p class="sub">
+            Solve rooms, type codes, and unlock the final surprise.
+            Smooth. Modern. Slightly evil.
+          </p>
+
+          <div class="callout">
+            <div class="calloutTitle">Rules</div>
+            <ul class="rules">
+              <li>One room at a time.</li>
+              <li>Timer starts when you enter a room.</li>
+              <li>Winning is mandatory.</li>
+            </ul>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" id="startBtn" type="button">Start Room 1</button>
+          </div>
+
+          <p class="tiny muted">Best on desktop (drag + word search). Mobile still works.</p>
+        </section>
+
+        <!-- ROOM 1 -->
+        <section id="room1" class="section" aria-labelledby="r1Title">
+          <div class="sectionHead">
+            <div>
+              <div class="kicker">Room 1</div>
+              <h2 id="r1Title">Our Timeline</h2>
+              <p class="sub">
+                Drag the 10 moments into order (earliest → latest), then type the generated code to unlock.
+              </p>
+            </div>
+            <button class="btn ghost" id="backHomeBtn" type="button">Back</button>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <ol id="timelineList" class="timeline" aria-label="Draggable timeline list"></ol>
+
+              <div class="row">
+                <button id="r1CheckBtn" class="btn primary" type="button">Check order</button>
+                <button id="r1ShuffleBtn" class="btn" type="button">New shuffle</button>
+                <button id="r1ResetBtn" class="btn ghost" type="button">Reset</button>
+              </div>
+
+              <div id="r1Feedback" class="feedback" role="status" aria-live="polite"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panelTitle">Lock Console</div>
+              <p class="sub">Solve the room to reveal a code. Type it to unlock.</p>
+
+              <div class="lock">
+                <div class="lockTop">
+                  <div class="lockIcon" id="r1LockIcon" aria-hidden="true"></div>
+                  <div>
+                    <div class="lockLabel">Room 1 Code</div>
+                    <div class="tiny muted" id="r1CodeHint">Solve the timeline to reveal.</div>
+                  </div>
+                </div>
+
+                <div class="codeReveal">
+                  <div class="tiny muted">Generated code</div>
+                  <div class="code" id="r1CodeDisplay">──────────</div>
+                </div>
+
+                <div class="codeEntry">
+                  <input
+                    id="r1CodeInput"
+                    class="input"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    placeholder="Enter 10-digit code"
+                    maxlength="10"
+                    aria-label="Enter room 1 code"
+                    disabled
+                  />
+                  <button id="r1UnlockBtn" class="btn primary" type="button" disabled>Unlock</button>
+                </div>
+
+                <div id="r1UnlockMsg" class="tiny muted"></div>
+
+                <!-- Consistent unlock animation -->
+                <div class="unlockFx hidden" id="r1UnlockFx" aria-hidden="true">
+                  <div class="fxRing"></div>
+                  <div class="fxSpark fx1"></div>
+                  <div class="fxSpark fx2"></div>
+                  <div class="fxSpark fx3"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ROOM 2 -->
+        <section id="room2" class="section" aria-labelledby="r2Title">
+          <div class="sectionHead">
+            <div>
+              <div class="kicker">Room 2</div>
+              <h2 id="r2Title">Word Search</h2>
+              <p class="sub">
+                Drag across letters to select a word. Find them all to unlock the next room.
+              </p>
+            </div>
+            <button class="btn ghost" id="backR1Btn" type="button">Back</button>
+          </div>
+
+          <div class="grid2">
+            <div class="panel">
+              <div class="panelTitle">Words to find</div>
+              <ul id="wordList" class="wordList"></ul>
+
+              <div class="divider soft"></div>
+
+              <div class="row">
+                <button id="r2NewBtn" class="btn" type="button">New puzzle</button>
+                <button id="r2ClearBtn" class="btn ghost" type="button">Clear selection</button>
+              </div>
+
+              <div id="r2Feedback" class="feedback" role="status" aria-live="polite"></div>
+
+              <div class="lock">
+                <div class="lockTop">
+                  <div class="lockIcon" id="r2LockIcon" aria-hidden="true"></div>
+                  <div>
+                    <div class="lockLabel">Exit Door</div>
+                    <div class="tiny muted" id="r2Hint">Find all words to reveal the code.</div>
+                  </div>
+                </div>
+
+                <div class="codeReveal">
+                  <div class="tiny muted">Generated code</div>
+                  <div class="code" id="r2CodeDisplay">────────</div>
+                </div>
+
+                <div class="codeEntry">
+                  <input
+                    id="r2CodeInput"
+                    class="input"
+                    autocomplete="one-time-code"
+                    placeholder="Enter code"
+                    maxlength="8"
+                    aria-label="Enter room 2 code"
+                    disabled
+                  />
+                  <button id="r2UnlockBtn" class="btn primary" type="button" disabled>Unlock</button>
+                </div>
+
+                <div id="r2UnlockMsg" class="tiny muted"></div>
+
+                <!-- Consistent unlock animation -->
+                <div class="unlockFx hidden" id="r2UnlockFx" aria-hidden="true">
+                  <div class="fxRing"></div>
+                  <div class="fxSpark fx1"></div>
+                  <div class="fxSpark fx2"></div>
+                  <div class="fxSpark fx3"></div>
+                </div>
+              </div>
+
+              <p class="tiny muted" style="margin-top:10px;">Room 3 is a placeholder for now.</p>
+            </div>
+
+            <div class="wsWrap">
+              <div class="wsGrid" id="wsGrid" aria-label="Word search grid"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ROOM 3 PLACEHOLDER -->
+        <section id="room3" class="section" aria-labelledby="r3Title">
+          <div class="sectionHead">
+            <div>
+              <div class="kicker">Room 3</div>
+              <h2 id="r3Title">Unlocked ✅</h2>
+              <p class="sub">We’ll build the final reveal next.</p>
+            </div>
+            <button class="btn ghost" id="backR2Btn" type="button">Back</button>
+          </div>
+
+          <div class="callout">
+            <div class="calloutTitle">Next step</div>
+            <p class="sub">Tell me what you want the final surprise to be (love note, date plan, photo gallery, etc.).</p>
+          </div>
+        </section>
+
+      </section>
+    </div>
   </main>
 
   <script src="script.js"></script>
