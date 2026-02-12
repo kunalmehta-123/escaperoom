@@ -124,14 +124,6 @@
                 </div>
 
                 <div id="r1UnlockMsg" class="tiny muted"></div>
-
-                <!-- Consistent unlock animation -->
-                <div class="unlockFx hidden" id="r1UnlockFx" aria-hidden="true">
-                  <div class="fxRing"></div>
-                  <div class="fxSpark fx1"></div>
-                  <div class="fxSpark fx2"></div>
-                  <div class="fxSpark fx3"></div>
-                </div>
               </div>
             </div>
           </div>
@@ -144,7 +136,7 @@
               <div class="kicker">Room 2</div>
               <h2 id="r2Title">Word Search</h2>
               <p class="sub">
-                Drag across letters to select a word. Find them all to unlock the next room.
+                Drag across letters to select a word. Find them all to reveal a code, then type it to unlock.
               </p>
             </div>
             <button class="btn ghost" id="backR1Btn" type="button">Back</button>
@@ -192,17 +184,7 @@
                 </div>
 
                 <div id="r2UnlockMsg" class="tiny muted"></div>
-
-                <!-- Consistent unlock animation -->
-                <div class="unlockFx hidden" id="r2UnlockFx" aria-hidden="true">
-                  <div class="fxRing"></div>
-                  <div class="fxSpark fx1"></div>
-                  <div class="fxSpark fx2"></div>
-                  <div class="fxSpark fx3"></div>
-                </div>
               </div>
-
-              <p class="tiny muted" style="margin-top:10px;">Room 3 is a placeholder for now.</p>
             </div>
 
             <div class="wsWrap">
@@ -231,6 +213,22 @@
       </section>
     </div>
   </main>
+
+  <!-- Full-screen unlock overlay (shared across rooms) -->
+  <div class="unlockOverlay hidden" id="unlockOverlay" aria-hidden="true">
+    <div class="unlockModal">
+      <div class="unlockBadge">UNLOCKED</div>
+      <div class="unlockTitle" id="unlockTitle">Door unlocked</div>
+      <div class="unlockSub" id="unlockSub">Entering the next room…</div>
+
+      <div class="unlockBigFx" id="unlockBigFx" aria-hidden="true">
+        <div class="fxRing"></div>
+        <div class="fxSpark fx1"></div>
+        <div class="fxSpark fx2"></div>
+        <div class="fxSpark fx3"></div>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
