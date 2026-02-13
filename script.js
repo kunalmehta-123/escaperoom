@@ -2,26 +2,26 @@
 // Sleek one-page escape room
 // + Room timer (per room)
 // + Progress meter (completed / total rooms)
-// + Room 1: timeline -> code -> manual unlock w/ consistent animation
-// + Room 2: word search -> code -> manual unlock w/ consistent animation
+// + Room 1: timeline -> code -> manual unlock w/ full-screen overlay
+// + Room 2: word search -> guaranteed placement + verified -> code -> manual unlock overlay
 // ============================
 
-// ----- CONFIG: how many rooms count toward the meter?
-// We currently have 2 playable rooms (Room1 and Room2). Room3 is placeholder.
+// ----- CONFIG -----
 const TOTAL_ROOMS = 2;
 
-// ----- HUD (meter + timer) -----
+// ======================
+// HUD: meter + timer
+// ======================
 let completedRooms = 0;
 let timerInterval = null;
 let roomStartTs = null;
-let activeRoomId = "home";
 
 function setMeter(completed, total) {
+  completedRooms = completed;
+
   const textEl = document.getElementById("meterText");
   const fillEl = document.getElementById("meterFill");
   const barEl = document.querySelector(".meterBar");
-
-  completedRooms = completed;
 
   if (textEl) textEl.textContent = `${completed} / ${total}`;
   const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
@@ -56,19 +56,20 @@ function stopTimerToIdle() {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = null;
   roomStartTs = null;
+
   const labelEl = document.getElementById("timerLabel");
   const valueEl = document.getElementById("timerValue");
   if (labelEl) labelEl.textContent = "Timer";
   if (valueEl) valueEl.textContent = "00:00";
 }
 
-// ----- Navigation / section swap -----
+// ======================
+// Navigation: one page swap
+// ======================
 function showSection(id) {
   document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
   document.getElementById(id)?.classList.add("active");
-  activeRoomId = id;
 
-  // timer behavior
   if (id === "room1") startRoomTimer("Room 1");
   else if (id === "room2") startRoomTimer("Room 2");
   else if (id === "room3") startRoomTimer("Room 3");
@@ -77,14 +78,34 @@ function showSection(id) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// ----- Shared unlock animation helper -----
-function playUnlockFx(fxEl) {
-  if (!fxEl) return;
-  fxEl.classList.remove("hidden");
-  // restart animation
-  void fxEl.offsetWidth;
-  fxEl.classList.remove("hidden");
-  setTimeout(() => fxEl.classList.add("hidden"), 900);
+// ======================
+// Full-screen unlock overlay
+// ======================
+function showUnlockOverlay(title, sub, onDone) {
+  const overlay = document.getElementById("unlockOverlay");
+  const titleEl = document.getElementById("unlockTitle");
+  const subEl = document.getElementById("unlockSub");
+  const fx = document.getElementById("unlockBigFx");
+
+  if (!overlay || !titleEl || !subEl || !fx) {
+    onDone?.();
+    return;
+  }
+
+  titleEl.textContent = title || "Unlocked";
+  subEl.textContent = sub || "Entering the next room…";
+
+  overlay.classList.remove("hidden");
+
+  // restart FX (by forcing reflow)
+  fx.classList.add("hidden");
+  void fx.offsetWidth;
+  fx.classList.remove("hidden");
+
+  setTimeout(() => {
+    overlay.classList.add("hidden");
+    onDone?.();
+  }, 950);
 }
 
 // ======================
@@ -106,7 +127,7 @@ const ROOM1 = {
 };
 
 let r1ShuffledStart = [];
-let r1Code = "";   // generated per shuffle
+let r1Code = "";
 let r1Completed = false;
 
 function shuffle(arr) {
@@ -173,7 +194,6 @@ function initRoom1() {
   const unlockBtn = document.getElementById("r1UnlockBtn");
   const unlockMsg = document.getElementById("r1UnlockMsg");
   const lockIcon = document.getElementById("r1LockIcon");
-  const fx = document.getElementById("r1UnlockFx");
 
   function setFeedback(kind, msg) {
     feedback.className = `feedback ${kind || ""}`;
@@ -210,7 +230,7 @@ function initRoom1() {
   });
 
   shuffleBtn.addEventListener("click", () => {
-    r1Completed = false; // if they reshuffle, they must solve again
+    r1Completed = false;
     newShuffle();
   });
 
@@ -246,14 +266,17 @@ function initRoom1() {
     if (codeInput.value === r1Code) {
       unlockMsg.textContent = "";
       lockIcon.classList.add("unlocked");
-      playUnlockFx(fx);
 
       if (!r1Completed) {
         r1Completed = true;
         setMeter(Math.min(completedRooms + 1, TOTAL_ROOMS), TOTAL_ROOMS);
       }
 
-      setTimeout(() => showSection("room2"), 900);
+      showUnlockOverlay(
+        "Room 1 Unlocked",
+        "Entering Room 2…",
+        () => showSection("room2")
+      );
     } else {
       unlockMsg.textContent = "That code isn’t right. Try again.";
       unlockMsg.style.color = "rgba(255,77,77,.95)";
@@ -266,8 +289,8 @@ function initRoom1() {
 // ROOM 2 — Word Search
 // ======================
 const WS = {
-  size: 14, // bigger so longer words fit comfortably
-  // Your words (dedupe "baby")
+  size: 14,
+  // Your words (dedupe BABY)
   words: Array.from(new Set([
     "yucky",
     "baby",
@@ -299,15 +322,10 @@ function emptyGrid(n){
 }
 function inBounds(n,r,c){ return r>=0 && c>=0 && r<n && c<n; }
 
+// 8 directions
 const DIRS = [
-  {dr:0, dc:1},   // right
-  {dr:1, dc:0},   // down
-  {dr:1, dc:1},   // down-right
-  {dr:-1, dc:1},  // up-right
-  {dr:0, dc:-1},  // left
-  {dr:-1, dc:0},  // up
-  {dr:-1, dc:-1}, // up-left
-  {dr:1, dc:-1},  // down-left
+  {dr:0, dc:1}, {dr:1, dc:0}, {dr:1, dc:1}, {dr:-1, dc:1},
+  {dr:0, dc:-1}, {dr:-1, dc:0}, {dr:-1, dc:-1}, {dr:1, dc:-1},
 ];
 
 function canPlace(grid, word, r, c, dir){
@@ -331,15 +349,37 @@ function placeWord(grid, word, r, c, dir){
   return cells;
 }
 
-function generateWordSearch() {
+// Verify that ALL words exist somewhere in the completed grid
+function gridHasWord(grid, word){
+  const n = grid.length;
+  for (let r=0;r<n;r++){
+    for (let c=0;c<n;c++){
+      for (const d of DIRS){
+        let ok = true;
+        for (let i=0;i<word.length;i++){
+          const rr = r + d.dr*i;
+          const cc = c + d.dc*i;
+          if (!inBounds(n, rr, cc) || grid[rr][cc] !== word[i]) { ok = false; break; }
+        }
+        if (ok) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function generateWordSearchGuaranteed() {
   wsGrid = emptyGrid(WS.size);
   wsFound = new Set();
   wsCode = "";
   r2Completed = false;
 
-  for (const w of WS.words) {
+  // place longer words first for better success rate
+  const wordsSorted = [...WS.words].sort((a,b) => b.length - a.length);
+
+  for (const w of wordsSorted) {
     let placed = false;
-    for (let tries=0; tries<400 && !placed; tries++){
+    for (let tries=0; tries<800 && !placed; tries++){
       const dir = DIRS[randInt(DIRS.length)];
       const r = randInt(WS.size);
       const c = randInt(WS.size);
@@ -348,12 +388,23 @@ function generateWordSearch() {
         placed = true;
       }
     }
-    if (!placed) return generateWordSearch();
+    if (!placed) {
+      // restart generation if any word fails to place
+      return generateWordSearchGuaranteed();
+    }
   }
 
+  // fill blanks
   for (let r=0;r<WS.size;r++){
     for (let c=0;c<WS.size;c++){
       if (wsGrid[r][c] === "") wsGrid[r][c] = randLetter();
+    }
+  }
+
+  // final verification pass: ensure every word truly exists in grid
+  for (const w of WS.words) {
+    if (!gridHasWord(wsGrid, w)) {
+      return generateWordSearchGuaranteed();
     }
   }
 }
@@ -403,9 +454,8 @@ function markWordDone(word){
   if (el) el.classList.add("done");
 }
 
+// Room 2 code: deterministic enough but random-looking
 function makeRoom2Code() {
-  // simple deterministic code from found words count + grid size, but random-looking:
-  // generate 8 chars (letters + digits) from a seeded-ish string
   const base = `${WS.size}${WS.words.length}${Math.random().toString(36).slice(2)}`.toUpperCase();
   const chars = base.replace(/[^A-Z0-9]/g,"");
   return chars.slice(0, 8).padEnd(8, "X");
@@ -422,7 +472,6 @@ function initRoom2() {
   const unlockBtn = document.getElementById("r2UnlockBtn");
   const unlockMsg = document.getElementById("r2UnlockMsg");
   const lockIcon = document.getElementById("r2LockIcon");
-  const fx = document.getElementById("r2UnlockFx");
 
   function resetLockUI() {
     wsCode = "";
@@ -436,7 +485,7 @@ function initRoom2() {
   }
 
   function resetPuzzle() {
-    generateWordSearch();
+    generateWordSearchGuaranteed();
     renderWordList();
     renderGrid();
     setR2Feedback("", "Drag across letters to select a word.");
@@ -490,17 +539,45 @@ function initRoom2() {
     return path.map(p => wsGrid[p.r][p.c]).join("");
   }
 
-  function tryCommit(path){
-    if (!path.length) return;
-    const s = stringFromPath(path);
+  // More forgiving commit:
+  // if selection contains a target word as substring (forward or backward), accept it.
+  function matchWordFromSelection(sel) {
+    const s = sel.toUpperCase();
     const rev = s.split("").reverse().join("");
 
-    const hit = WS.words.find(w => w === s || w === rev);
-    if (hit && !wsFound.has(hit)) {
+    for (const w of WS.words) {
+      if (wsFound.has(w)) continue;
+      if (s.includes(w) || rev.includes(w)) return w;
+    }
+    return null;
+  }
+
+  function tryCommit(path){
+    if (!path.length) return;
+
+    const s = stringFromPath(path);
+    const hit = matchWordFromSelection(s);
+
+    if (hit) {
       wsFound.add(hit);
       markWordDone(hit);
 
-      path.forEach(p => {
+      // Mark the *exact* cells for hit within the selection:
+      // Find substring index either forward or reverse, then mark those cells found.
+      const upper = s.toUpperCase();
+      const rev = upper.split("").reverse().join("");
+      let startIdx = upper.indexOf(hit);
+      let useReverse = false;
+
+      let workingPath = path;
+      if (startIdx < 0) {
+        startIdx = rev.indexOf(hit);
+        useReverse = true;
+        workingPath = [...path].reverse();
+      }
+
+      const hitCells = workingPath.slice(startIdx, startIdx + hit.length);
+      hitCells.forEach(p => {
         const el = getCellEl(p.r,p.c);
         if (el) {
           el.classList.remove("sel");
@@ -509,6 +586,7 @@ function initRoom2() {
       });
 
       setR2Feedback("ok", `Found: ${hit} ✅`);
+      clearSelection();
 
       if (wsFound.size === WS.words.length) {
         setR2Feedback("ok", "All words found. Door code revealed ✅");
@@ -587,7 +665,7 @@ function initRoom2() {
     lastPath = [];
   });
 
-  // Input unlock
+  // unlock input behavior
   codeInput.addEventListener("input", () => {
     codeInput.value = codeInput.value.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 8);
   });
@@ -597,15 +675,17 @@ function initRoom2() {
     if (codeInput.value === wsCode) {
       unlockMsg.textContent = "";
       lockIcon.classList.add("unlocked");
-      playUnlockFx(fx);
 
       if (!r2Completed) {
         r2Completed = true;
-        // Room2 completion increments meter to total
         setMeter(Math.min(completedRooms + 1, TOTAL_ROOMS), TOTAL_ROOMS);
       }
 
-      setTimeout(() => showSection("room3"), 900);
+      showUnlockOverlay(
+        "Room 2 Unlocked",
+        "Entering Room 3…",
+        () => showSection("room3")
+      );
     } else {
       unlockMsg.textContent = "That code isn’t right. Try again.";
       unlockMsg.style.color = "rgba(255,77,77,.95)";
@@ -614,12 +694,12 @@ function initRoom2() {
   });
 }
 
-// ----- App init -----
+// ======================
+// App init
+// ======================
 document.addEventListener("DOMContentLoaded", () => {
-  // meter starts 0/2
   setMeter(0, TOTAL_ROOMS);
 
-  // nav buttons
   document.getElementById("startBtn")?.addEventListener("click", () => showSection("room1"));
   document.getElementById("backHomeBtn")?.addEventListener("click", () => showSection("home"));
   document.getElementById("backR1Btn")?.addEventListener("click", () => showSection("room1"));
