@@ -24,9 +24,9 @@
           <div class="meter">
             <div class="meterTop">
               <span class="meterLabel">Progress</span>
-              <span class="meterText" id="meterText">0 / 2</span>
+              <span class="meterText" id="meterText">0 / 3</span>
             </div>
-            <div class="meterBar" role="progressbar" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0">
+            <div class="meterBar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0">
               <div class="meterFill" id="meterFill"></div>
             </div>
           </div>
@@ -62,7 +62,7 @@
             <button class="btn primary" id="startBtn" type="button">Start Room 1</button>
           </div>
 
-          <p class="tiny muted">Best on desktop (drag + word search). Mobile still works.</p>
+          <p class="tiny muted">Best on desktop (drag + word search + map). Mobile still works.</p>
         </section>
 
         <!-- ROOM 1 -->
@@ -193,20 +193,127 @@
           </div>
         </section>
 
-        <!-- ROOM 3 PLACEHOLDER -->
+        <!-- ROOM 3: MAP -->
         <section id="room3" class="section" aria-labelledby="r3Title">
           <div class="sectionHead">
             <div>
               <div class="kicker">Room 3</div>
-              <h2 id="r3Title">Unlocked ✅</h2>
-              <p class="sub">We’ll build the final reveal next.</p>
+              <h2 id="r3Title">Bay Area Pin Drop</h2>
+              <p class="sub">
+                I’ll give you a location. Click where you think it is on this vague Bay Area map.
+                5 correct pins unlock the door.
+              </p>
             </div>
             <button class="btn ghost" id="backR2Btn" type="button">Back</button>
           </div>
 
+          <div class="grid2">
+            <div class="panel">
+              <div class="panelTitle">Prompt</div>
+
+              <div class="promptBox">
+                <div class="tiny muted">Find this location:</div>
+                <div class="promptName" id="mapPrompt">—</div>
+                <div class="tiny muted" id="mapSubhint">Click the map to place your guess.</div>
+              </div>
+
+              <div class="divider soft"></div>
+
+              <div class="panelTitle">Progress</div>
+              <div class="chipRow" id="mapChips"></div>
+
+              <div id="r3Feedback" class="feedback" role="status" aria-live="polite"></div>
+
+              <div class="lock">
+                <div class="lockTop">
+                  <div class="lockIcon" id="r3LockIcon" aria-hidden="true"></div>
+                  <div>
+                    <div class="lockLabel">Exit Door</div>
+                    <div class="tiny muted" id="r3Hint">Pin all 5 locations to reveal the code.</div>
+                  </div>
+                </div>
+
+                <div class="codeReveal">
+                  <div class="tiny muted">Generated code</div>
+                  <div class="code" id="r3CodeDisplay">────────</div>
+                </div>
+
+                <div class="codeEntry">
+                  <input
+                    id="r3CodeInput"
+                    class="input"
+                    autocomplete="one-time-code"
+                    placeholder="Enter code"
+                    maxlength="8"
+                    aria-label="Enter room 3 code"
+                    disabled
+                  />
+                  <button id="r3UnlockBtn" class="btn primary" type="button" disabled>Unlock</button>
+                </div>
+
+                <div id="r3UnlockMsg" class="tiny muted"></div>
+              </div>
+            </div>
+
+            <div class="wsWrap mapWrap">
+              <div class="mapStage">
+                <svg id="bayMap" viewBox="0 0 600 520" class="baySvg" aria-label="Vague Bay Area map">
+                  <!-- land mass -->
+                  <path
+                    d="M110,70
+                       C210,20 345,40 430,95
+                       C500,140 540,230 510,320
+                       C485,390 420,465 315,485
+                       C220,505 140,465 105,405
+                       C70,345 55,270 70,205
+                       C85,140 95,95 110,70 Z"
+                    class="land"
+                  />
+                  <!-- bay cutout -->
+                  <path
+                    d="M265,120
+                       C325,120 360,165 355,205
+                       C350,250 305,270 275,265
+                       C240,257 225,225 230,190
+                       C238,150 242,120 265,120 Z"
+                    class="bay"
+                  />
+                  <!-- hint coast line -->
+                  <path
+                    d="M120,110 C160,155 170,210 165,265
+                       C160,340 200,420 285,460"
+                    class="coast"
+                  />
+
+                  <!-- click layer -->
+                  <rect x="0" y="0" width="600" height="520" class="hit" />
+
+                  <!-- user guess marker -->
+                  <circle id="guessDot" cx="-10" cy="-10" r="10" class="guessDot" />
+
+                  <!-- confirmed pins -->
+                  <g id="pins"></g>
+                </svg>
+              </div>
+              <p class="tiny muted" style="margin:10px 2px 0;">Tip: it’s intentionally vague — trust the vibes.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ROOM 4 PLACEHOLDER -->
+        <section id="room4" class="section" aria-labelledby="r4Title">
+          <div class="sectionHead">
+            <div>
+              <div class="kicker">Room 4</div>
+              <h2 id="r4Title">Unlocked ✅</h2>
+              <p class="sub">Next we’ll build the final reveal / surprise screen.</p>
+            </div>
+            <button class="btn ghost" id="backR3Btn" type="button">Back</button>
+          </div>
+
           <div class="callout">
-            <div class="calloutTitle">Next step</div>
-            <p class="sub">Tell me what you want the final surprise to be (love note, date plan, photo gallery, etc.).</p>
+            <div class="calloutTitle">Final Reveal Ideas</div>
+            <p class="sub">Love note + date plan + photo gallery + “claim your prize” button.</p>
           </div>
         </section>
 
