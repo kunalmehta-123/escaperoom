@@ -168,10 +168,9 @@ function renderTimeline(listEl, items) {
     li.draggable = true;
     li.dataset.value = text;
     li.innerHTML = `
-      <span class="handle">⠿</span>
-      <span class="label">${text}</span>
-      <span class="hint">drag</span>
-    `;
+  <span class="handle">⠿</span>
+  <span class="label">${text}</span>
+`;
     li.addEventListener("dragstart", () => li.classList.add("dragging"));
     li.addEventListener("dragend", () => li.classList.remove("dragging"));
     listEl.appendChild(li);
