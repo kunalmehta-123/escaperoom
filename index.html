@@ -200,7 +200,7 @@
               <div class="kicker">Room 3</div>
               <h2 id="r3Title">Bay Area Pin Drop</h2>
               <p class="sub">
-                I’ll give you a location. Click where you think it is on this vague Bay Area map.
+                I’ll give you a location. Click where you think it is on this Bay Area map.
                 5 correct pins unlock the door.
               </p>
             </div>
@@ -257,32 +257,56 @@
 
             <div class="wsWrap mapWrap">
               <div class="mapStage">
-                <svg id="bayMap" viewBox="0 0 600 520" class="baySvg" aria-label="Vague Bay Area map">
-                  <!-- land mass -->
-                  <path
-                    d="M110,70
-                       C210,20 345,40 430,95
-                       C500,140 540,230 510,320
-                       C485,390 420,465 315,485
-                       C220,505 140,465 105,405
-                       C70,345 55,270 70,205
-                       C85,140 95,95 110,70 Z"
-                    class="land"
+                <svg id="bayMap" viewBox="0 0 600 520" class="baySvg" aria-label="Bay Area map (no labels)">
+                  <!-- Ocean background -->
+                  <rect x="0" y="0" width="600" height="520" fill="rgba(255,255,255,.02)"></rect>
+
+                  <!-- Landmass (stylized Bay Area + Peninsula shape) -->
+                  <path class="land"
+                    d="
+                      M120,80
+                      C160,40 240,35 300,55
+                      C350,70 380,95 410,120
+                      C450,155 510,210 520,270
+                      C530,335 505,405 460,445
+                      C415,485 350,505 285,495
+                      C235,488 210,468 190,445
+                      C165,415 150,380 145,330
+                      C140,285 150,250 160,220
+                      C180,165 165,135 140,110
+                      C125,95 115,90 120,80
+                      Z
+                    " />
+
+                  <!-- SF Bay water cutout -->
+                  <path class="bay"
+                    d="
+                      M255,145
+                      C285,125 320,130 345,150
+                      C365,165 375,190 370,220
+                      C363,260 330,285 295,280
+                      C265,275 245,250 240,220
+                      C232,185 235,160 255,145
+                      Z
+                    " />
+
+                  <!-- South Bay extension -->
+                  <path class="bay"
+                    d="
+                      M310,275
+                      C345,285 365,315 365,345
+                      C365,385 330,405 300,395
+                      C275,387 260,365 260,340
+                      C260,305 280,270 310,275
+                      Z
+                    " />
+
+                  <!-- Coastline guide -->
+                  <path class="coast"
+                    d="M150,120 C200,160 210,220 200,280 C190,350 215,420 275,465"
                   />
-                  <!-- bay cutout -->
-                  <path
-                    d="M265,120
-                       C325,120 360,165 355,205
-                       C350,250 305,270 275,265
-                       C240,257 225,225 230,190
-                       C238,150 242,120 265,120 Z"
-                    class="bay"
-                  />
-                  <!-- hint coast line -->
-                  <path
-                    d="M120,110 C160,155 170,210 165,265
-                       C160,340 200,420 285,460"
-                    class="coast"
+                  <path class="coast"
+                    d="M410,125 C470,175 500,235 505,285 C510,345 475,420 420,455"
                   />
 
                   <!-- click layer -->
@@ -295,25 +319,29 @@
                   <g id="pins"></g>
                 </svg>
               </div>
-              <p class="tiny muted" style="margin:10px 2px 0;">Tip: it’s intentionally vague — trust the vibes.</p>
+              <p class="tiny muted" style="margin:10px 2px 0;">Tip: no labels — trust the Bay Area vibes.</p>
             </div>
           </div>
         </section>
 
-        <!-- ROOM 4 PLACEHOLDER -->
+        <!-- ROOM 4: FINAL REVEAL -->
         <section id="room4" class="section" aria-labelledby="r4Title">
           <div class="sectionHead">
             <div>
-              <div class="kicker">Room 4</div>
-              <h2 id="r4Title">Unlocked ✅</h2>
-              <p class="sub">Next we’ll build the final reveal / surprise screen.</p>
+              <div class="kicker">Finale</div>
+              <h2 id="r4Title">Happy Valentine’s Day ❤️</h2>
+              <p class="sub">You did it. Now claim your prize.</p>
             </div>
             <button class="btn ghost" id="backR3Btn" type="button">Back</button>
           </div>
 
           <div class="callout">
-            <div class="calloutTitle">Final Reveal Ideas</div>
-            <p class="sub">Love note + date plan + photo gallery + “claim your prize” button.</p>
+            <div class="calloutTitle">Tonight’s Menu</div>
+            <p class="sub">A little something I put together for us 🥂</p>
+          </div>
+
+          <div class="menuWrap">
+            <img src="menu.jpeg" class="menuImg" alt="Valentine's Menu">
           </div>
         </section>
 
