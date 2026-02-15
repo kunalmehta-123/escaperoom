@@ -286,7 +286,7 @@ function initRoom1() {
 // ROOM 2 — Word Search
 // ======================
 const WS = {
-  size: 14,
+  size: 12,
   words: Array.from(new Set([
     "yucky",
     "baby",
