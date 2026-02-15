@@ -401,7 +401,7 @@ function renderWordList() {
     const li = document.createElement("li");
     li.className = "word";
     li.dataset.word = w;
-    li.innerHTML = `<span>${w}</span><small>${w.length} letters</small>`;
+    li.innerHTML = `<span>${w}</span>`;
     ul.appendChild(li);
   });
 }
