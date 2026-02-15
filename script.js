@@ -1,10 +1,6 @@
 // ============================
-// Sleek one-page escape room (Rooms 1–3)
-// + Room timer (per room)
-// + Progress meter (completed / total rooms)
-// + Room 1: timeline -> 10-digit code -> manual unlock -> overlay
-// + Room 2: word search -> guaranteed placement + verified -> code -> manual unlock -> overlay
-// + Room 3: vague Bay Area map -> click prompts -> code -> manual unlock -> overlay
+// Valentine Escape — script.js
+// One-page sections: home, room1 (timeline), room2 (10x10 word search), room3 (map), room4 (finale)
 // ============================
 
 const TOTAL_ROOMS = 3;
@@ -64,7 +60,7 @@ function stopTimerToIdle() {
 }
 
 // ======================
-// Navigation: one page swap
+// Navigation: section swap
 // ======================
 function showSection(id) {
   document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
@@ -73,7 +69,7 @@ function showSection(id) {
   if (id === "room1") startRoomTimer("Room 1");
   else if (id === "room2") startRoomTimer("Room 2");
   else if (id === "room3") startRoomTimer("Room 3");
-  else if (id === "room4") startRoomTimer("Room 4");
+  else if (id === "room4") startRoomTimer("Finale");
   else stopTimerToIdle();
 
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -179,6 +175,7 @@ function renderTimeline(listEl, items) {
 }
 
 function buildRoom1Code() {
+  // Code is index positions from the INITIAL shuffle: earliest becomes digit, latest becomes digit
   return ROOM1.correctOrder.map(e => r1ShuffledStart.indexOf(e)).join("");
 }
 
@@ -283,10 +280,12 @@ function initRoom1() {
 }
 
 // ======================
-// ROOM 2 — Word Search
+// ROOM 2 — Word Search (10x10)
+// Guaranteed placement by retrying until all words exist in grid.
 // ======================
 const WS = {
-  size: 14,
+  size: 10,
+  // Dedupe; your list includes BABY twice so it appears once in puzzle list.
   words: Array.from(new Set([
     "yucky",
     "baby",
@@ -360,19 +359,18 @@ function gridHasWord(grid, word){
 }
 
 function generateWordSearchGuaranteed() {
-  wsGrid = emptyGrid(WS.size);
-  wsFound = new Set();
-  wsCode = "";
-  r2Completed = false;
+  const maxLen = Math.max(...WS.words.map(w => w.length));
+  const size = Math.max(WS.size, maxLen); // should remain 10 for your list
+  wsGrid = emptyGrid(size);
 
   const wordsSorted = [...WS.words].sort((a,b) => b.length - a.length);
 
   for (const w of wordsSorted) {
     let placed = false;
-    for (let tries=0; tries<800 && !placed; tries++){
+    for (let tries=0; tries<1600 && !placed; tries++){
       const dir = DIRS[randInt(DIRS.length)];
-      const r = randInt(WS.size);
-      const c = randInt(WS.size);
+      const r = randInt(size);
+      const c = randInt(size);
       if (canPlace(wsGrid, w, r, c, dir)){
         placeWord(wsGrid, w, r, c, dir);
         placed = true;
@@ -381,12 +379,14 @@ function generateWordSearchGuaranteed() {
     if (!placed) return generateWordSearchGuaranteed();
   }
 
-  for (let r=0;r<WS.size;r++){
-    for (let c=0;c<WS.size;c++){
+  // Fill remaining cells
+  for (let r=0;r<size;r++){
+    for (let c=0;c<size;c++){
       if (wsGrid[r][c] === "") wsGrid[r][c] = randLetter();
     }
   }
 
+  // Validate all words exist
   for (const w of WS.words) {
     if (!gridHasWord(wsGrid, w)) return generateWordSearchGuaranteed();
   }
@@ -406,11 +406,13 @@ function renderWordList() {
 
 function renderGrid() {
   const gridEl = document.getElementById("wsGrid");
-  gridEl.style.gridTemplateColumns = `repeat(${WS.size}, 1fr)`;
+  const size = wsGrid.length;
+
+  gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
   gridEl.innerHTML = "";
 
-  for (let r=0;r<WS.size;r++){
-    for (let c=0;c<WS.size;c++){
+  for (let r=0;r<size;r++){
+    for (let c=0;c<size;c++){
       const d = document.createElement("div");
       d.className = "cell";
       d.textContent = wsGrid[r][c];
@@ -438,8 +440,9 @@ function markWordDone(word){
 }
 
 function makeRoom2Code() {
-  const base = `${WS.size}${WS.words.length}${Math.random().toString(36).slice(2)}`.toUpperCase();
-  const chars = base.replace(/[^A-Z0-9]/g,"");
+  // deterministic-ish for testing but changes on each new puzzle
+  const seed = `${wsGrid.length}${WS.words.length}${Math.random().toString(36).slice(2)}`.toUpperCase();
+  const chars = seed.replace(/[^A-Z0-9]/g,"");
   return chars.slice(0, 8).padEnd(8, "X");
 }
 
@@ -466,187 +469,145 @@ function initRoom2() {
     lockIcon.classList.remove("unlocked");
   }
 
-  function resetPuzzle() {
+  function newPuzzle() {
+    wsFound = new Set();
     generateWordSearchGuaranteed();
     renderWordList();
     renderGrid();
-    setR2Feedback("", "Drag across letters to select a word.");
-    document.querySelectorAll(".cell").forEach(el => el.classList.remove("found","sel"));
+    setR2Feedback("", "");
     resetLockUI();
+
+    // Clear any found highlighting
+    document.querySelectorAll(".cell.found").forEach(el => el.classList.remove("found"));
   }
 
-  resetPuzzle();
+  newPuzzle();
 
-  newBtn.addEventListener("click", resetPuzzle);
-  clearBtn.addEventListener("click", () => {
-    clearSelection();
-    setR2Feedback("", "Selection cleared.");
-  });
-
+  // Selection state
   let isDown = false;
-  let start = null;
-  let lastPath = [];
+  let startCell = null;
 
-  function coordsFromEl(el){
-    return { r: parseInt(el.dataset.r,10), c: parseInt(el.dataset.c,10) };
+  function coordsFromEvent(e) {
+    const t = e.target.closest(".cell");
+    if (!t) return null;
+    return { r: Number(t.dataset.r), c: Number(t.dataset.c) };
   }
 
-  function getPathLine(a, b){
+  function highlightLine(a, b) {
+    clearSelection();
+    if (!a || !b) return [];
+
     const dr = b.r - a.r;
     const dc = b.c - a.c;
 
+    // Normalize direction to -1, 0, 1
     const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
     const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
 
-    if (!(dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc))) return [];
+    // Must be straight/diag
+    if (!(stepR === 0 || stepC === 0 || Math.abs(stepR) === 1) || !(stepC === 0 || Math.abs(stepC) === 1)) return [];
 
     const len = Math.max(Math.abs(dr), Math.abs(dc)) + 1;
-    const path = [];
+    const cells = [];
     for (let i=0;i<len;i++){
-      path.push({ r: a.r + stepR*i, c: a.c + stepC*i });
+      const rr = a.r + stepR*i;
+      const cc = a.c + stepC*i;
+      const el = getCellEl(rr, cc);
+      if (!el) return [];
+      el.classList.add("sel");
+      cells.push({ r: rr, c: cc });
     }
-    return path;
+    return cells;
   }
 
-  function paintPath(path){
-    clearSelection();
-    path.forEach(p => {
-      const el = getCellEl(p.r,p.c);
-      if (el && !el.classList.contains("found")) el.classList.add("sel");
+  function readWordFromCells(cells) {
+    return cells.map(p => wsGrid[p.r][p.c]).join("");
+  }
+
+  function tryCommitSelection(cells) {
+    if (!cells || cells.length < 3) { // allow 3+ so LOJ is ok (3)
+      setR2Feedback("no", "Select a full word (drag across letters).");
+      return;
+    }
+    const forward = readWordFromCells(cells);
+    const backward = forward.split("").reverse().join("");
+
+    const match = WS.words.find(w => w === forward || w === backward);
+    if (!match) {
+      setR2Feedback("no", "No match — try another direction.");
+      return;
+    }
+    if (wsFound.has(match)) {
+      setR2Feedback("", "Already found.");
+      return;
+    }
+
+    wsFound.add(match);
+    setR2Feedback("ok", `Found: ${match}`);
+
+    // mark word done + cells found
+    markWordDone(match);
+    document.querySelectorAll(".cell.sel").forEach(el => {
+      el.classList.remove("sel");
+      el.classList.add("found");
     });
-  }
 
-  function stringFromPath(path){
-    return path.map(p => wsGrid[p.r][p.c]).join("");
-  }
-
-  function matchWordFromSelection(sel) {
-    const s = sel.toUpperCase();
-    const rev = s.split("").reverse().join("");
-
-    for (const w of WS.words) {
-      if (wsFound.has(w)) continue;
-      if (s.includes(w) || rev.includes(w)) return w;
-    }
-    return null;
-  }
-
-  function tryCommit(path){
-    if (!path.length) return;
-
-    const s = stringFromPath(path);
-    const hit = matchWordFromSelection(s);
-
-    if (hit) {
-      wsFound.add(hit);
-      markWordDone(hit);
-
-      const upper = s.toUpperCase();
-      const rev = upper.split("").reverse().join("");
-      let startIdx = upper.indexOf(hit);
-      let workingPath = path;
-
-      if (startIdx < 0) {
-        startIdx = rev.indexOf(hit);
-        workingPath = [...path].reverse();
-      }
-
-      const hitCells = workingPath.slice(startIdx, startIdx + hit.length);
-      hitCells.forEach(p => {
-        const el = getCellEl(p.r,p.c);
-        if (el) {
-          el.classList.remove("sel");
-          el.classList.add("found");
-        }
-      });
-
-      setR2Feedback("ok", `Found: ${hit} ✅`);
-      clearSelection();
-
-      if (wsFound.size === WS.words.length) {
-        setR2Feedback("ok", "All words found. Door code revealed ✅");
-        wsCode = makeRoom2Code();
-        codeDisplay.textContent = wsCode;
-        hint.textContent = "Type the code to unlock.";
-        codeInput.disabled = false;
-        unlockBtn.disabled = false;
-        codeInput.focus();
-      }
-    } else {
-      setR2Feedback("no", "Not a word. Try again.");
-      clearSelection();
+    // Completed all
+    if (wsFound.size === WS.words.length) {
+      wsCode = makeRoom2Code();
+      codeDisplay.textContent = wsCode;
+      hint.textContent = "Type the code to unlock.";
+      codeInput.disabled = false;
+      unlockBtn.disabled = false;
+      codeInput.focus();
     }
   }
 
-  // mouse
-  gridEl.addEventListener("mousedown", (e) => {
-    const cell = e.target.closest(".cell");
-    if (!cell) return;
+  // Pointer events for smooth drag across
+  gridEl.addEventListener("pointerdown", (e) => {
+    const pos = coordsFromEvent(e);
+    if (!pos) return;
     isDown = true;
-    start = coordsFromEl(cell);
-    lastPath = [start];
-    paintPath(lastPath);
+    startCell = pos;
+    gridEl.setPointerCapture(e.pointerId);
+    highlightLine(startCell, startCell);
   });
 
-  gridEl.addEventListener("mousemove", (e) => {
-    if (!isDown || !start) return;
-    const cell = e.target.closest(".cell");
-    if (!cell) return;
-    const end = coordsFromEl(cell);
-    const path = getPathLine(start, end);
-    if (!path.length) return;
-    lastPath = path;
-    paintPath(lastPath);
+  gridEl.addEventListener("pointermove", (e) => {
+    if (!isDown) return;
+    const pos = coordsFromEvent(e);
+    if (!pos) return;
+    highlightLine(startCell, pos);
   });
 
-  window.addEventListener("mouseup", () => {
+  gridEl.addEventListener("pointerup", () => {
     if (!isDown) return;
     isDown = false;
-    tryCommit(lastPath);
-    start = null;
-    lastPath = [];
+    const sel = [...document.querySelectorAll(".cell.sel")].map(el => ({
+      r: Number(el.dataset.r), c: Number(el.dataset.c)
+    }));
+    tryCommitSelection(sel);
+    clearSelection();
   });
 
-  // touch
-  gridEl.addEventListener("touchstart", (e) => {
-    const t = e.touches[0];
-    const el = document.elementFromPoint(t.clientX, t.clientY)?.closest(".cell");
-    if (!el) return;
-    isDown = true;
-    start = coordsFromEl(el);
-    lastPath = [start];
-    paintPath(lastPath);
-    e.preventDefault();
-  }, { passive:false });
+  newBtn.addEventListener("click", () => {
+    r2Completed = false;
+    newPuzzle();
+  });
 
-  gridEl.addEventListener("touchmove", (e) => {
-    if (!isDown || !start) return;
-    const t = e.touches[0];
-    const el = document.elementFromPoint(t.clientX, t.clientY)?.closest(".cell");
-    if (!el) return;
-    const end = coordsFromEl(el);
-    const path = getPathLine(start, end);
-    if (!path.length) return;
-    lastPath = path;
-    paintPath(lastPath);
-    e.preventDefault();
-  }, { passive:false });
-
-  window.addEventListener("touchend", () => {
-    if (!isDown) return;
-    isDown = false;
-    tryCommit(lastPath);
-    start = null;
-    lastPath = [];
+  clearBtn.addEventListener("click", () => {
+    clearSelection();
+    setR2Feedback("", "");
   });
 
   codeInput.addEventListener("input", () => {
-    codeInput.value = codeInput.value.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 8);
+    codeInput.value = codeInput.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8);
   });
 
   unlockBtn.addEventListener("click", () => {
     if (!wsCode) return;
-    if (codeInput.value === wsCode) {
+
+    if (codeInput.value.toUpperCase() === wsCode) {
       unlockMsg.textContent = "";
       lockIcon.classList.add("unlocked");
 
@@ -657,7 +618,7 @@ function initRoom2() {
 
       showUnlockOverlay("Room 2 Unlocked", "Entering Room 3…", () => showSection("room3"));
     } else {
-      unlockMsg.textContent = "That code isn’t right. Try again.";
+      unlockMsg.textContent = "Nope — check the code and try again.";
       unlockMsg.style.color = "rgba(255,77,77,.95)";
       setTimeout(() => (unlockMsg.style.color = ""), 600);
     }
@@ -665,219 +626,203 @@ function initRoom2() {
 }
 
 // ======================
-// ROOM 3 — Bay Area Pin Drop
+// ROOM 3 — Bay Map pin drop
+// (Unlabeled map; click near target coords; tolerance controls difficulty)
 // ======================
-const MAP3 = {
+const MAP = {
   prompts: [
-    { key: "CICEROS", label: "Ciceros in Cupertino", x: 335, y: 330 },
-    { key: "LOJ", label: "Little Original Joes in San Francisco", x: 290, y: 200 },
-    { key: "NAPA", label: "Napa", x: 330, y: 150 },
-    { key: "SANTACRUZ", label: "Santa Cruz", x: 235, y: 390 },
-    { key: "BANANALEAF", label: "Banana Leaf in Milpitas", x: 360, y: 275 },
+    { name: "Ciceros in Cupertino", x: 520, y: 420 },
+    { name: "Little Original Joes in San Francisco", x: 415, y: 210 },
+    { name: "Napa", x: 460, y: 130 },
+    { name: "Santa Cruz", x: 455, y: 470 },
+    { name: "Banana Leaf in Milpitas", x: 560, y: 325 },
   ],
-  tolerance: 32,
+  tolerance: 55 // px in SVG space (820x560). Lower = harder.
 };
 
-let r3Index = 0;
-let r3Found = [];
-let r3Code = "";
+let mapOrder = [];
+let mapIdx = 0;
 let r3Completed = false;
+let r3Code = "";
 
-function dist(a, b) {
+function dist(a,b){
   const dx = a.x - b.x;
   const dy = a.y - b.y;
   return Math.sqrt(dx*dx + dy*dy);
 }
 
+function makeRoom3Code() {
+  const seed = `BAY${Math.random().toString(36).slice(2)}`.toUpperCase().replace(/[^A-Z0-9]/g,"");
+  return seed.slice(0,8).padEnd(8,"X");
+}
+
+function renderMapChips() {
+  const wrap = document.getElementById("mapChips");
+  wrap.innerHTML = "";
+  mapOrder.forEach((p, i) => {
+    const d = document.createElement("div");
+    d.className = "chip" + (i < mapIdx ? " done" : "");
+    d.textContent = `${i+1}. ${p.name.replace(" in ", " • ")}`;
+    wrap.appendChild(d);
+  });
+}
+
 function setR3Feedback(kind, msg) {
   const el = document.getElementById("r3Feedback");
-  if (!el) return;
   el.className = `feedback ${kind || ""}`;
   el.textContent = msg || "";
 }
 
-function makeRoom3Code() {
-  const base = `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`.toUpperCase();
-  const clean = base.replace(/[^A-Z0-9]/g, "");
-  return clean.slice(0, 8).padEnd(8, "X");
-}
-
-function svgPointFromEvent(svg, evt) {
+function svgPointFromClick(svg, clientX, clientY){
   const pt = svg.createSVGPoint();
-  const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-  const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
   pt.x = clientX; pt.y = clientY;
-  const screenCTM = svg.getScreenCTM();
-  if (!screenCTM) return { x: 0, y: 0 };
-  const inv = screenCTM.inverse();
-  const p = pt.matrixTransform(inv);
-  return { x: p.x, y: p.y };
+  const m = svg.getScreenCTM();
+  if (!m) return {x:0,y:0};
+  const inv = m.inverse();
+  const loc = pt.matrixTransform(inv);
+  return { x: loc.x, y: loc.y };
 }
 
-function initRoom3Map() {
+function initRoom3() {
   const svg = document.getElementById("bayMap");
-  const guessDot = document.getElementById("guessDot");
-  const pinsGroup = document.getElementById("pins");
-
   const promptEl = document.getElementById("mapPrompt");
-  const subhintEl = document.getElementById("mapSubhint");
-  const chipsEl = document.getElementById("mapChips");
+  const guessDot = document.getElementById("guessDot");
+  const pins = document.getElementById("pins");
 
   const codeDisplay = document.getElementById("r3CodeDisplay");
-  const hintEl = document.getElementById("r3Hint");
+  const hint = document.getElementById("r3Hint");
   const codeInput = document.getElementById("r3CodeInput");
   const unlockBtn = document.getElementById("r3UnlockBtn");
   const unlockMsg = document.getElementById("r3UnlockMsg");
   const lockIcon = document.getElementById("r3LockIcon");
 
-  function renderChips() {
-    if (!chipsEl) return;
-    chipsEl.innerHTML = "";
-    MAP3.prompts.forEach((p, i) => {
-      const chip = document.createElement("div");
-      chip.className = `chip ${i < r3Found.length ? "done" : ""}`;
-      chip.textContent = `${i+1}. ${p.label}`;
-      chipsEl.appendChild(chip);
-    });
-  }
-
-  function setPrompt() {
-    const p = MAP3.prompts[r3Index];
-    if (!p) return;
-    if (promptEl) promptEl.textContent = p.label;
-    if (subhintEl) subhintEl.textContent = "Click the map to place your guess.";
-  }
-
   function resetLockUI() {
     r3Code = "";
-    if (codeDisplay) codeDisplay.textContent = "────────";
-    if (hintEl) hintEl.textContent = "Pin all 5 locations to reveal the code.";
-    if (codeInput) {
-      codeInput.value = "";
-      codeInput.disabled = true;
-    }
-    if (unlockBtn) unlockBtn.disabled = true;
-    if (unlockMsg) unlockMsg.textContent = "";
-    if (lockIcon) lockIcon.classList.remove("unlocked");
+    codeDisplay.textContent = "────────";
+    hint.textContent = "Pin all 5 locations to reveal the code.";
+    codeInput.value = "";
+    codeInput.disabled = true;
+    unlockBtn.disabled = true;
+    unlockMsg.textContent = "";
+    lockIcon.classList.remove("unlocked");
   }
 
-  function resetRoom3() {
-    r3Index = 0;
-    r3Found = [];
+  function startMap() {
+    mapOrder = shuffle(MAP.prompts);
+    mapIdx = 0;
     r3Completed = false;
-    if (pinsGroup) pinsGroup.innerHTML = "";
-    if (guessDot) { guessDot.setAttribute("cx", "-10"); guessDot.setAttribute("cy", "-10"); }
-    resetLockUI();
-    renderChips();
-    setPrompt();
+    pins.innerHTML = "";
+    guessDot.setAttribute("cx", "-10");
+    guessDot.setAttribute("cy", "-10");
     setR3Feedback("", "");
+    resetLockUI();
+    renderMapChips();
+    promptEl.textContent = mapOrder[mapIdx].name;
   }
 
-  resetRoom3();
+  startMap();
 
-  function dropPin(at) {
-    if (!pinsGroup) return;
-    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    c.setAttribute("cx", String(at.x));
-    c.setAttribute("cy", String(at.y));
-    c.setAttribute("r", "9");
-    c.setAttribute("class", "pin pinPulse");
-    pinsGroup.appendChild(c);
-    setTimeout(() => c.classList.remove("pinPulse"), 700);
-  }
+  svg.addEventListener("click", (e) => {
+    if (mapIdx >= mapOrder.length) return;
 
-  function handleGuess(point) {
-    const target = MAP3.prompts[r3Index];
-    if (!target) return;
+    const pt = svgPointFromClick(svg, e.clientX, e.clientY);
+    // show guess
+    guessDot.setAttribute("cx", String(pt.x));
+    guessDot.setAttribute("cy", String(pt.y));
 
-    if (guessDot) {
-      guessDot.setAttribute("cx", String(point.x));
-      guessDot.setAttribute("cy", String(point.y));
-    }
+    const target = mapOrder[mapIdx];
+    const d = dist(pt, target);
 
-    const d = dist(point, { x: target.x, y: target.y });
+    if (d <= MAP.tolerance) {
+      // confirm pin
+      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", String(target.x));
+      c.setAttribute("cy", String(target.y));
+      c.setAttribute("r", "9");
+      c.setAttribute("class", "pin pinPulse");
+      pins.appendChild(c);
 
-    if (d <= MAP3.tolerance) {
-      dropPin({ x: target.x, y: target.y });
-      r3Found.push(target.key);
-      renderChips();
-      setR3Feedback("ok", "Correct ✅");
+      setR3Feedback("ok", "Nailed it ✅");
 
-      r3Index++;
+      mapIdx++;
+      renderMapChips();
 
-      if (r3Index >= MAP3.prompts.length) {
-        setR3Feedback("ok", "All locations pinned. Code revealed ✅");
-        r3Code = makeRoom3Code();
-        if (codeDisplay) codeDisplay.textContent = r3Code;
-        if (hintEl) hintEl.textContent = "Type the code to unlock.";
-        if (codeInput) { codeInput.disabled = false; codeInput.focus(); }
-        if (unlockBtn) unlockBtn.disabled = false;
+      if (mapIdx < mapOrder.length) {
+        promptEl.textContent = mapOrder[mapIdx].name;
       } else {
-        setPrompt();
+        // all complete
+        setR3Feedback("ok", "All locations found. Reveal + unlock!");
+        r3Code = makeRoom3Code();
+        codeDisplay.textContent = r3Code;
+        hint.textContent = "Type the code to unlock.";
+        codeInput.disabled = false;
+        unlockBtn.disabled = false;
+        codeInput.focus();
       }
     } else {
-      setR3Feedback("no", "Not quite — adjust your pin and try again.");
+      setR3Feedback("no", "Not quite — click closer to where it should be.");
     }
-  }
+  });
 
-  if (svg) {
-    svg.addEventListener("click", (e) => {
-      const p = svgPointFromEvent(svg, e);
-      handleGuess(p);
-    });
+  codeInput.addEventListener("input", () => {
+    codeInput.value = codeInput.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8);
+  });
 
-    svg.addEventListener("touchstart", (e) => {
-      const p = svgPointFromEvent(svg, e);
-      handleGuess(p);
-      e.preventDefault();
-    }, { passive:false });
-  }
+  unlockBtn.addEventListener("click", () => {
+    if (!r3Code) return;
 
-  if (codeInput) {
-    codeInput.addEventListener("input", () => {
-      codeInput.value = codeInput.value.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 8);
-    });
-  }
+    if (codeInput.value.toUpperCase() === r3Code) {
+      unlockMsg.textContent = "";
+      lockIcon.classList.add("unlocked");
 
-  if (unlockBtn) {
-    unlockBtn.addEventListener("click", () => {
-      if (!r3Code) return;
-      if (codeInput.value === r3Code) {
-        if (unlockMsg) unlockMsg.textContent = "";
-        if (lockIcon) lockIcon.classList.add("unlocked");
-
-        if (!r3Completed) {
-          r3Completed = true;
-          setMeter(Math.min(completedRooms + 1, TOTAL_ROOMS), TOTAL_ROOMS);
-        }
-
-        showUnlockOverlay("Room 3 Unlocked", "Entering Room 4…", () => showSection("room4"));
-      } else {
-        if (unlockMsg) {
-          unlockMsg.textContent = "That code isn’t right. Try again.";
-          unlockMsg.style.color = "rgba(255,77,77,.95)";
-          setTimeout(() => (unlockMsg.style.color = ""), 600);
-        }
+      if (!r3Completed) {
+        r3Completed = true;
+        setMeter(Math.min(completedRooms + 1, TOTAL_ROOMS), TOTAL_ROOMS);
       }
-    });
-  }
+
+      showUnlockOverlay("Final Door Unlocked", "Happy Valentine’s Day ❤️", () => showSection("room4"));
+    } else {
+      unlockMsg.textContent = "Nope — try again.";
+      unlockMsg.style.color = "rgba(255,77,77,.95)";
+      setTimeout(() => (unlockMsg.style.color = ""), 600);
+    }
+  });
+
+  // expose restart for dev convenience
+  window.__restartMap = startMap;
 }
 
 // ======================
-// App init
+// Wiring buttons
 // ======================
-document.addEventListener("DOMContentLoaded", () => {
-  setMeter(0, TOTAL_ROOMS);
-
+function wireNav() {
   document.getElementById("startBtn")?.addEventListener("click", () => showSection("room1"));
+
   document.getElementById("backHomeBtn")?.addEventListener("click", () => showSection("home"));
   document.getElementById("backR1Btn")?.addEventListener("click", () => showSection("room1"));
   document.getElementById("backR2Btn")?.addEventListener("click", () => showSection("room2"));
   document.getElementById("backR3Btn")?.addEventListener("click", () => showSection("room3"));
 
-  showSection("home");
+  document.getElementById("restartBtn")?.addEventListener("click", () => {
+    // Full reset
+    setMeter(0, TOTAL_ROOMS);
+    r1Completed = false;
+    r2Completed = false;
+    r3Completed = false;
 
+    // Re-init content by reloading page state
+    // (simplest + most reliable for GitHub Pages)
+    location.reload();
+  });
+}
+
+// ======================
+// Boot
+// ======================
+document.addEventListener("DOMContentLoaded", () => {
+  setMeter(0, TOTAL_ROOMS);
+  wireNav();
   initRoom1();
   initRoom2();
-  initRoom3Map();
+  initRoom3();
 });
