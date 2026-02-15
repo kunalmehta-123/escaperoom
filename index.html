@@ -200,8 +200,8 @@
               <div class="kicker">Room 3</div>
               <h2 id="r3Title">Bay Area Pin Drop</h2>
               <p class="sub">
-                I’ll give you a location. Click where you think it is on this unlabeled Bay Area map.
-                5 correct pins unlock the final door.
+                I’ll give you a location. Click where you think it is on this vague Bay Area map.
+                5 correct pins unlock the door.
               </p>
             </div>
             <button class="btn ghost" id="backR2Btn" type="button">Back</button>
@@ -228,7 +228,7 @@
                 <div class="lockTop">
                   <div class="lockIcon" id="r3LockIcon" aria-hidden="true"></div>
                   <div>
-                    <div class="lockLabel">Final Door</div>
+                    <div class="lockLabel">Exit Door</div>
                     <div class="tiny muted" id="r3Hint">Pin all 5 locations to reveal the code.</div>
                   </div>
                 </div>
@@ -257,50 +257,36 @@
 
             <div class="wsWrap mapWrap">
               <div class="mapStage">
-                <!-- More detailed Bay Area-ish outline (still no labels) -->
-                <svg id="bayMap" viewBox="0 0 820 560" class="baySvg" aria-label="Unlabeled Bay Area map">
-                  <!-- ocean background -->
-                  <rect x="0" y="0" width="820" height="560" class="ocean" />
-
-                  <!-- land -->
-                  <path class="land"
-                    d="M110,80
-                       C145,50 220,35 290,45
-                       C360,55 410,70 450,92
-                       C480,108 520,130 560,160
-                       C610,198 650,250 665,305
-                       C680,360 665,410 630,455
-                       C585,510 520,535 445,535
-                       C365,535 295,520 240,490
-                       C190,463 160,430 145,390
-                       C120,325 95,290 85,245
-                       C70,175 85,115 110,80 Z" />
-
-                  <!-- bay water cutouts (bigger + more recognizable) -->
-                  <path class="bay"
-                    d="M365,120
-                       C415,120 455,150 468,190
-                       C480,228 465,270 430,298
-                       C400,322 360,330 335,310
-                       C305,285 300,250 312,212
-                       C328,160 332,120 365,120 Z" />
-
-                  <path class="bay"
-                    d="M430,300
-                       C470,295 510,318 520,352
-                       C532,395 505,430 460,435
-                       C420,440 395,410 398,372
-                       C401,332 405,306 430,300 Z" />
-
-                  <!-- coastline stroke for crispness -->
-                  <path class="coast"
-                    d="M130,120
-                       C165,160 190,210 185,265
-                       C178,345 210,425 285,480
-                       C360,535 470,545 555,520" />
+                <svg id="bayMap" viewBox="0 0 600 520" class="baySvg" aria-label="Vague Bay Area map">
+                  <!-- land mass -->
+                  <path
+                    d="M110,70
+                       C210,20 345,40 430,95
+                       C500,140 540,230 510,320
+                       C485,390 420,465 315,485
+                       C220,505 140,465 105,405
+                       C70,345 55,270 70,205
+                       C85,140 95,95 110,70 Z"
+                    class="land"
+                  />
+                  <!-- bay cutout -->
+                  <path
+                    d="M265,120
+                       C325,120 360,165 355,205
+                       C350,250 305,270 275,265
+                       C240,257 225,225 230,190
+                       C238,150 242,120 265,120 Z"
+                    class="bay"
+                  />
+                  <!-- hint coast line -->
+                  <path
+                    d="M120,110 C160,155 170,210 165,265
+                       C160,340 200,420 285,460"
+                    class="coast"
+                  />
 
                   <!-- click layer -->
-                  <rect x="0" y="0" width="820" height="560" class="hit" />
+                  <rect x="0" y="0" width="600" height="520" class="hit" />
 
                   <!-- user guess marker -->
                   <circle id="guessDot" cx="-10" cy="-10" r="10" class="guessDot" />
@@ -309,36 +295,25 @@
                   <g id="pins"></g>
                 </svg>
               </div>
-              <p class="tiny muted" style="margin:10px 2px 0;">No labels. Just vibes. 🧭</p>
+              <p class="tiny muted" style="margin:10px 2px 0;">Tip: it’s intentionally vague — trust the vibes.</p>
             </div>
           </div>
         </section>
 
-        <!-- FINAL: VALENTINE -->
+        <!-- ROOM 4 PLACEHOLDER -->
         <section id="room4" class="section" aria-labelledby="r4Title">
           <div class="sectionHead">
             <div>
-              <div class="kicker">Complete</div>
-              <h2 id="r4Title">Happy Valentine’s Day ❤️</h2>
-              <p class="sub">
-                You escaped. You won. You’re the greatest.
-              </p>
+              <div class="kicker">Room 4</div>
+              <h2 id="r4Title">Unlocked ✅</h2>
+              <p class="sub">Next we’ll build the final reveal / surprise screen.</p>
             </div>
             <button class="btn ghost" id="backR3Btn" type="button">Back</button>
           </div>
 
           <div class="callout">
-            <div class="calloutTitle">Tonight’s Menu</div>
-            <p class="sub">A proper endgame.</p>
-          </div>
-
-          <!-- Put your uploaded image into the repo as: menu.jpg -->
-          <div class="menuWrap">
-            <img class="menuImg" src="menu.jpg" alt="Valentine's Day Menu" />
-          </div>
-
-          <div class="actions" style="margin-top:14px;">
-            <button class="btn" id="restartBtn" type="button">Restart</button>
+            <div class="calloutTitle">Final Reveal Ideas</div>
+            <p class="sub">Love note + date plan + photo gallery + “claim your prize” button.</p>
           </div>
         </section>
 
