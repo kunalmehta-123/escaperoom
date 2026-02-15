@@ -669,13 +669,13 @@ function initRoom2() {
 // ======================
 const MAP3 = {
   prompts: [
-    { key: "CICEROS", label: "Ciceros in Cupertino", x: 335, y: 330 },
-    { key: "LOJ", label: "Little Original Joes in San Francisco", x: 290, y: 200 },
-    { key: "NAPA", label: "Napa", x: 330, y: 150 },
-    { key: "SANTACRUZ", label: "Santa Cruz", x: 235, y: 390 },
-    { key: "BANANALEAF", label: "Banana Leaf in Milpitas", x: 360, y: 275 },
+    { key: "CICEROS",     label: "Ciceros in Cupertino",                    x: 305, y: 430 }, // South Bay (west of SJ)
+    { key: "LOJ",         label: "Little Original Joes in San Francisco",   x: 235, y: 170 }, // SF / Peninsula tip
+    { key: "NAPA",        label: "Napa",                                    x: 285, y: 120 }, // North Bay
+    { key: "SANTACRUZ",   label: "Santa Cruz",                               x: 215, y: 500 }, // Coast south of SF
+    { key: "BANANALEAF",  label: "Banana Leaf in Milpitas",                 x: 355, y: 455 }, // East/South Bay
   ],
-  tolerance: 32,
+  tolerance: 36, // a bit more forgiving since the map is more detailed
 };
 
 let r3Index = 0;
