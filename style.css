@@ -265,3 +265,95 @@ h1,h2{margin:0 0 8px}
 @media (max-width:860px){
   .grid2{grid-template-columns:1fr}
 }
+
+/* ===== Lock Console polish ===== */
+.panel .sub{ margin-top: 6px; }
+
+.lock{
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+}
+
+.lockTop{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.lockLabel{
+  font-size: 13px;
+  font-weight: 1000;
+  letter-spacing: .02em;
+}
+
+#r1CodeHint, #r2Hint, #r3Hint{
+  display:block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(246,247,251,.65);
+}
+
+.codeReveal{
+  display:grid;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.code{
+  width: 100%;
+  text-align: center;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.25);
+  font-family: var(--mono);
+  letter-spacing: .22em;
+  font-size: 14px;
+}
+
+.codeEntry{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top: 0;
+}
+
+.input{
+  height: 44px;
+  border-radius: 14px;
+}
+
+.btn.primary{
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+}
+
+/* Make the lock icon look intentional */
+.lockIcon{
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  position: relative;
+  overflow:hidden;
+}
+
+.lockIcon::after{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255,61,127,.55), rgba(155,92,255,.55));
+  opacity: .95;
+}
+
+/* Optional: reduce visual noise from tiny muted lines */
+.tiny.muted{ line-height: 1.3; }
+
