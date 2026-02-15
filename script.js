@@ -1,10 +1,10 @@
 // ============================
-// Sleek one-page escape room (Rooms 1–3)
+// Sleek one-page escape room (Rooms 1–3 + Finale Room 4)
 // + Room timer (per room)
 // + Progress meter (completed / total rooms)
 // + Room 1: timeline -> 10-digit code -> manual unlock -> overlay
-// + Room 2: word search -> guaranteed placement + verified -> code -> manual unlock -> overlay
-// + Room 3: vague Bay Area map -> click prompts -> code -> manual unlock -> overlay
+// + Room 2: 10x10 word search -> guaranteed placement + verified -> code -> manual unlock -> overlay
+// + Room 3: Bay Area map (no labels) -> click prompts -> code -> manual unlock -> overlay -> Room 4 shows menu.jpeg
 // ============================
 
 const TOTAL_ROOMS = 3;
@@ -73,7 +73,7 @@ function showSection(id) {
   if (id === "room1") startRoomTimer("Room 1");
   else if (id === "room2") startRoomTimer("Room 2");
   else if (id === "room3") startRoomTimer("Room 3");
-  else if (id === "room4") startRoomTimer("Room 4");
+  else if (id === "room4") startRoomTimer("Finale");
   else stopTimerToIdle();
 
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -179,6 +179,7 @@ function renderTimeline(listEl, items) {
 }
 
 function buildRoom1Code() {
+  // Code is index positions from the INITIAL shuffle for each event in true order
   return ROOM1.correctOrder.map(e => r1ShuffledStart.indexOf(e)).join("");
 }
 
@@ -283,10 +284,12 @@ function initRoom1() {
 }
 
 // ======================
-// ROOM 2 — Word Search
+// ROOM 2 — Word Search (10x10)
+// Guaranteed placement + verified existence of all words.
+// Supports mouse drag + touch drag.
 // ======================
 const WS = {
-  size: 12,
+  size: 10,
   words: Array.from(new Set([
     "yucky",
     "baby",
@@ -319,8 +322,8 @@ function emptyGrid(n){
 function inBounds(n,r,c){ return r>=0 && c>=0 && r<n && c<n; }
 
 const DIRS = [
-  {dr:0, dc:1}, {dr:1, dc:0}, {dr:1, dc:1}, {dr:-1, dc:1},
-  {dr:0, dc:-1}, {dr:-1, dc:0}, {dr:-1, dc:-1}, {dr:1, dc:-1},
+  {dr:0, dc:1},  {dr:1, dc:0},  {dr:1, dc:1},  {dr:-1, dc:1},
+  {dr:0, dc:-1}, {dr:-1, dc:0}, {dr:-1, dc:-1},{dr:1, dc:-1},
 ];
 
 function canPlace(grid, word, r, c, dir){
@@ -369,7 +372,7 @@ function generateWordSearchGuaranteed() {
 
   for (const w of wordsSorted) {
     let placed = false;
-    for (let tries=0; tries<800 && !placed; tries++){
+    for (let tries=0; tries<900 && !placed; tries++){
       const dir = DIRS[randInt(DIRS.length)];
       const r = randInt(WS.size);
       const c = randInt(WS.size);
@@ -498,6 +501,7 @@ function initRoom2() {
     const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
     const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
 
+    // Only straight or perfect diagonal
     if (!(dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc))) return [];
 
     const len = Math.max(Math.abs(dr), Math.abs(dc)) + 1;
@@ -578,7 +582,7 @@ function initRoom2() {
     }
   }
 
-  // mouse
+  // Mouse drag
   gridEl.addEventListener("mousedown", (e) => {
     const cell = e.target.closest(".cell");
     if (!cell) return;
@@ -607,7 +611,7 @@ function initRoom2() {
     lastPath = [];
   });
 
-  // touch
+  // Touch drag (elementFromPoint so it works reliably)
   gridEl.addEventListener("touchstart", (e) => {
     const t = e.touches[0];
     const el = document.elementFromPoint(t.clientX, t.clientY)?.closest(".cell");
@@ -666,16 +670,17 @@ function initRoom2() {
 
 // ======================
 // ROOM 3 — Bay Area Pin Drop
+// Matches the updated Bay-like SVG in index.html (viewBox 0 0 600 520)
 // ======================
 const MAP3 = {
   prompts: [
-    { key: "CICEROS",     label: "Ciceros in Cupertino",                    x: 305, y: 430 }, // South Bay (west of SJ)
-    { key: "LOJ",         label: "Little Original Joes in San Francisco",   x: 235, y: 170 }, // SF / Peninsula tip
+    { key: "CICEROS",     label: "Ciceros in Cupertino",                    x: 305, y: 430 }, // South Bay
+    { key: "LOJ",         label: "Little Original Joes in San Francisco",   x: 235, y: 170 }, // SF
     { key: "NAPA",        label: "Napa",                                    x: 285, y: 120 }, // North Bay
-    { key: "SANTACRUZ",   label: "Santa Cruz",                               x: 215, y: 500 }, // Coast south of SF
+    { key: "SANTACRUZ",   label: "Santa Cruz",                              x: 215, y: 500 }, // Coast south
     { key: "BANANALEAF",  label: "Banana Leaf in Milpitas",                 x: 355, y: 455 }, // East/South Bay
   ],
-  tolerance: 36, // a bit more forgiving since the map is more detailed
+  tolerance: 36,
 };
 
 let r3Index = 0;
@@ -851,7 +856,7 @@ function initRoom3Map() {
           setMeter(Math.min(completedRooms + 1, TOTAL_ROOMS), TOTAL_ROOMS);
         }
 
-        showUnlockOverlay("Room 3 Unlocked", "Entering Room 4…", () => showSection("room4"));
+        showUnlockOverlay("Room 3 Unlocked", "Happy Valentine’s Day ❤️", () => showSection("room4"));
       } else {
         if (unlockMsg) {
           unlockMsg.textContent = "That code isn’t right. Try again.";
