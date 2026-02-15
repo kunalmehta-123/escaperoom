@@ -175,7 +175,6 @@ function renderTimeline(listEl, items) {
 }
 
 function buildRoom1Code() {
-  // Code is index positions from the INITIAL shuffle: earliest becomes digit, latest becomes digit
   return ROOM1.correctOrder.map(e => r1ShuffledStart.indexOf(e)).join("");
 }
 
@@ -281,11 +280,10 @@ function initRoom1() {
 
 // ======================
 // ROOM 2 — Word Search (10x10)
-// Guaranteed placement by retrying until all words exist in grid.
+// FIXED: dragging now uses elementFromPoint so it works with pointer capture.
 // ======================
 const WS = {
   size: 10,
-  // Dedupe; your list includes BABY twice so it appears once in puzzle list.
   words: Array.from(new Set([
     "yucky",
     "baby",
@@ -360,7 +358,7 @@ function gridHasWord(grid, word){
 
 function generateWordSearchGuaranteed() {
   const maxLen = Math.max(...WS.words.map(w => w.length));
-  const size = Math.max(WS.size, maxLen); // should remain 10 for your list
+  const size = Math.max(WS.size, maxLen); // 10 for your list
   wsGrid = emptyGrid(size);
 
   const wordsSorted = [...WS.words].sort((a,b) => b.length - a.length);
@@ -379,14 +377,12 @@ function generateWordSearchGuaranteed() {
     if (!placed) return generateWordSearchGuaranteed();
   }
 
-  // Fill remaining cells
   for (let r=0;r<size;r++){
     for (let c=0;c<size;c++){
       if (wsGrid[r][c] === "") wsGrid[r][c] = randLetter();
     }
   }
 
-  // Validate all words exist
   for (const w of WS.words) {
     if (!gridHasWord(wsGrid, w)) return generateWordSearchGuaranteed();
   }
@@ -440,7 +436,6 @@ function markWordDone(word){
 }
 
 function makeRoom2Code() {
-  // deterministic-ish for testing but changes on each new puzzle
   const seed = `${wsGrid.length}${WS.words.length}${Math.random().toString(36).slice(2)}`.toUpperCase();
   const chars = seed.replace(/[^A-Z0-9]/g,"");
   return chars.slice(0, 8).padEnd(8, "X");
@@ -477,7 +472,6 @@ function initRoom2() {
     setR2Feedback("", "");
     resetLockUI();
 
-    // Clear any found highlighting
     document.querySelectorAll(".cell.found").forEach(el => el.classList.remove("found"));
   }
 
@@ -487,10 +481,12 @@ function initRoom2() {
   let isDown = false;
   let startCell = null;
 
+  // ✅ FIX: use elementFromPoint so dragging works with pointer capture
   function coordsFromEvent(e) {
-    const t = e.target.closest(".cell");
-    if (!t) return null;
-    return { r: Number(t.dataset.r), c: Number(t.dataset.c) };
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el?.closest?.(".cell");
+    if (!cell) return null;
+    return { r: Number(cell.dataset.r), c: Number(cell.dataset.c) };
   }
 
   function highlightLine(a, b) {
@@ -500,12 +496,16 @@ function initRoom2() {
     const dr = b.r - a.r;
     const dc = b.c - a.c;
 
-    // Normalize direction to -1, 0, 1
     const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
     const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
 
-    // Must be straight/diag
-    if (!(stepR === 0 || stepC === 0 || Math.abs(stepR) === 1) || !(stepC === 0 || Math.abs(stepC) === 1)) return [];
+    // must be straight or diagonal
+    const straightOrDiag =
+      (stepR === 0 && stepC !== 0) ||
+      (stepC === 0 && stepR !== 0) ||
+      (Math.abs(stepR) === 1 && Math.abs(stepC) === 1);
+
+    if (!straightOrDiag) return [];
 
     const len = Math.max(Math.abs(dr), Math.abs(dc)) + 1;
     const cells = [];
@@ -525,7 +525,7 @@ function initRoom2() {
   }
 
   function tryCommitSelection(cells) {
-    if (!cells || cells.length < 3) { // allow 3+ so LOJ is ok (3)
+    if (!cells || cells.length < 3) {
       setR2Feedback("no", "Select a full word (drag across letters).");
       return;
     }
@@ -545,14 +545,12 @@ function initRoom2() {
     wsFound.add(match);
     setR2Feedback("ok", `Found: ${match}`);
 
-    // mark word done + cells found
     markWordDone(match);
     document.querySelectorAll(".cell.sel").forEach(el => {
       el.classList.remove("sel");
       el.classList.add("found");
     });
 
-    // Completed all
     if (wsFound.size === WS.words.length) {
       wsCode = makeRoom2Code();
       codeDisplay.textContent = wsCode;
@@ -563,7 +561,6 @@ function initRoom2() {
     }
   }
 
-  // Pointer events for smooth drag across
   gridEl.addEventListener("pointerdown", (e) => {
     const pos = coordsFromEvent(e);
     if (!pos) return;
@@ -627,7 +624,6 @@ function initRoom2() {
 
 // ======================
 // ROOM 3 — Bay Map pin drop
-// (Unlabeled map; click near target coords; tolerance controls difficulty)
 // ======================
 const MAP = {
   prompts: [
@@ -637,7 +633,7 @@ const MAP = {
     { name: "Santa Cruz", x: 455, y: 470 },
     { name: "Banana Leaf in Milpitas", x: 560, y: 325 },
   ],
-  tolerance: 55 // px in SVG space (820x560). Lower = harder.
+  tolerance: 55
 };
 
 let mapOrder = [];
@@ -726,7 +722,6 @@ function initRoom3() {
     if (mapIdx >= mapOrder.length) return;
 
     const pt = svgPointFromClick(svg, e.clientX, e.clientY);
-    // show guess
     guessDot.setAttribute("cx", String(pt.x));
     guessDot.setAttribute("cy", String(pt.y));
 
@@ -734,7 +729,6 @@ function initRoom3() {
     const d = dist(pt, target);
 
     if (d <= MAP.tolerance) {
-      // confirm pin
       const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       c.setAttribute("cx", String(target.x));
       c.setAttribute("cy", String(target.y));
@@ -750,7 +744,6 @@ function initRoom3() {
       if (mapIdx < mapOrder.length) {
         promptEl.textContent = mapOrder[mapIdx].name;
       } else {
-        // all complete
         setR3Feedback("ok", "All locations found. Reveal + unlock!");
         r3Code = makeRoom3Code();
         codeDisplay.textContent = r3Code;
@@ -788,7 +781,6 @@ function initRoom3() {
     }
   });
 
-  // expose restart for dev convenience
   window.__restartMap = startMap;
 }
 
@@ -804,13 +796,12 @@ function wireNav() {
   document.getElementById("backR3Btn")?.addEventListener("click", () => showSection("room3"));
 
   document.getElementById("restartBtn")?.addEventListener("click", () => {
-    // Full reset
     setMeter(0, TOTAL_ROOMS);
     r1Completed = false;
     r2Completed = false;
     r3Completed = false;
 
-    // Re-init content by reloading page state
+                                                          // Re-init content by reloading page state
     // (simplest + most reliable for GitHub Pages)
     location.reload();
   });
